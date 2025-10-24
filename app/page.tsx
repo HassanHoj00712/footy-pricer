@@ -12,7 +12,6 @@ const ADMIN_CODE = (process.env.NEXT_PUBLIC_ADMIN_CODE || "").trim();
 
 function useAdmin() {
   const [isAdmin, setIsAdmin] = useState(false);
-
   useEffect(() => {
     if (typeof window === "undefined") return;
     const s = sessionStorage.getItem("fp_admin");
@@ -21,7 +20,6 @@ function useAdmin() {
       console.warn("Admin PIN not set. Add NEXT_PUBLIC_ADMIN_CODE to .env.local and restart dev server.");
     }
   }, []);
-
   const login = () => {
     const code = (prompt("Admin code?") || "").trim();
     if (code && ADMIN_CODE && code === ADMIN_CODE) {
@@ -34,12 +32,10 @@ function useAdmin() {
       alert("Wrong code.");
     }
   };
-
   const logout = () => {
     sessionStorage.removeItem("fp_admin");
     setIsAdmin(false);
   };
-
   return { isAdmin, login, logout };
 }
 
@@ -49,14 +45,14 @@ type Role = 'GK' | 'DEF' | 'MID' | 'FWD';
 type Player = {
   id: string;
   name: string;
-  photo: string;        // URL or dataURL
+  photo: string;
   role: Role;
   goals: number;
   assists: number;
   matches: number;
-  motmCount: number;     // +0.5 each
-  hattrickCount: number; // +0.3 each
-  cleanSheetCount: number;// +0.3 each
+  motmCount: number;
+  hattrickCount: number;
+  cleanSheetCount: number;
 };
 
 type NewsItem = { id: string; title: string; details?: string; rivalry?: string; date: string; img?: string };
@@ -65,26 +61,23 @@ type MatchStatus = 'upcoming' | 'played';
 
 type MatchItem = {
   id: string;
-  date: string;     // YYYY-MM-DD
-  time?: string;    // HH:MM
+  date: string;
+  time?: string;
   location?: string;
   rivalry?: string;
   notes?: string;
   status: MatchStatus;
-
-  teamA: string[];  // playerIds
+  teamA: string[];
   teamB: string[];
   teamC: string[];
-
-  stats: Record<string, { goals: number; assists: number }>; // per playerId
-  motm: string[];        // multiple players
-  hattricks: string[];   // multiple players
-  cleanSheetPlayer?: string; // one player
-
+  stats: Record<string, { goals: number; assists: number }>;
+  motm: string[];
+  hattricks: string[];
+  cleanSheetPlayer?: string;
   applied?: Record<string, { goals: number; assists: number; counted: boolean }>;
 };
 
-/* ===================== Ladder (barème) ===================== */
+/* ===================== Ladder ===================== */
 const LADDER = [
   { s: 0.0, p: 0.3, l: 'TA3BENNN' },
   { s: 0.2, p: 0.5, l: 'Koussa' },
@@ -117,12 +110,11 @@ const LADDER = [
 function priceLookup(score: number) {
   let row = LADDER[0];
   for (const r of LADDER) { if (score >= r.s) row = r; else break; }
-  return row; // { p, l }
+  return row;
 }
 
 /* ===================== Helpers ===================== */
 const uid = () => Math.random().toString(36).slice(2, 9);
-
 function load<T>(k: string, d: T): T {
   if (typeof window === 'undefined') return d;
   try { const v = localStorage.getItem(k); return v ? (JSON.parse(v) as T) : d; } catch { return d; }
@@ -133,7 +125,6 @@ function save(k: string, v: any) { try { localStorage.setItem(k, JSON.stringify(
 export default function App() {
   const { isAdmin, login, logout } = useAdmin();
 
-  /* ---------- State ---------- */
   const [hydrated, setHydrated] = useState(false);
 
   // players
@@ -145,26 +136,20 @@ export default function App() {
 
   // news
   const [news, setNews] = useState<NewsItem[]>([]);
-  const [newsTitle, setNewsTitle] = useState('');
-  const [newsDetails, setNewsDetails] = useState('');
-  const [newsRivalry, setNewsRivalry] = useState('');
-  const [newsImg, setNewsImg] = useState<string>('');
+  const [newsTitle, setNewsTitle] = useState(''); const [newsDetails, setNewsDetails] = useState(''); const [newsRivalry, setNewsRivalry] = useState(''); const [newsImg, setNewsImg] = useState<string>('');
 
   // news editing
-  const [newsEditingId, setNewsEditingId] = useState<string>('');
-  const [newsEdit, setNewsEdit] = useState<{title:string; details:string; rivalry:string; img?:string}>({title:'', details:'', rivalry:'', img:''});
+  const [newsEditingId, setNewsEditingId] = useState<string>(''); const [newsEdit, setNewsEdit] = useState<{title:string; details:string; rivalry:string; img?:string}>({title:'', details:'', rivalry:'', img:''});
 
   // matches
   const [matches, setMatches] = useState<MatchItem[]>([]);
   const [selectedMatchId, setSelectedMatchId] = useState<string>('');
 
   // forms Upcoming
-  const [uDate, setUDate] = useState(''); const [uTime, setUTime] = useState(''); const [uLoc, setULoc] = useState('');
-  const [uRiv, setURiv] = useState('');   const [uNotes, setUNotes] = useState('');
+  const [uDate, setUDate] = useState(''); const [uTime, setUTime] = useState(''); const [uLoc, setULoc] = useState(''); const [uRiv, setURiv] = useState(''); const [uNotes, setUNotes] = useState('');
 
   // forms Played
-  const [pDate, setPDate] = useState(''); const [pTime, setPTime] = useState(''); const [pLoc, setPLoc] = useState('');
-  const [pRiv, setPRiv] = useState('');   const [pNotes, setPNotes] = useState('');
+  const [pDate, setPDate] = useState(''); const [pTime, setPTime] = useState(''); const [pLoc, setPLoc] = useState(''); const [pRiv, setPRiv] = useState(''); const [pNotes, setPNotes] = useState('');
 
   /* ---------- Effects ---------- */
   useEffect(() => {
@@ -188,7 +173,7 @@ export default function App() {
     const score = p.matches > 0 ? ((p.goals) + (p.assists * 0.7)) / p.matches : 0;
     const { p: pricePerMatch, l: level } = priceLookup(score);
     const bonus = (p.motmCount * 0.5) + (p.hattrickCount * 0.3) + (p.cleanSheetCount * 0.3);
-    const total = pricePerMatch * (p.matches / 2) + bonus; // current rule
+    const total = pricePerMatch * (p.matches / 2) + bonus;
     return { ...p, score: Number(score.toFixed(2)), pricePerMatch, level, bonus: Number(bonus.toFixed(1)), total: Number(total.toFixed(1)) };
   }), [players]);
 
@@ -196,23 +181,16 @@ export default function App() {
   const filteredPlayers = useMemo(() => playersComputed.filter(p => p.name.toLowerCase().includes(search.toLowerCase())), [playersComputed, search]);
 
   const selectedMatch = matches.find(m => m.id === selectedMatchId) || null;
+
   const teamPlayersForSelected = useMemo(() => {
     if (!selectedMatch) return [];
-    const ids = new Set<string>([
-      ...selectedMatch.teamA,
-      ...selectedMatch.teamB,
-      ...selectedMatch.teamC,
-    ]);
+    const ids = new Set<string>([...selectedMatch.teamA, ...selectedMatch.teamB, ...selectedMatch.teamC]);
     return players.filter(p => ids.has(p.id));
   }, [selectedMatch, players]);
 
   /* ---------- Loading gate ---------- */
   if (!hydrated) {
-    return (
-      <div className="min-h-screen p-6 text-gray-600 bg-gradient-to-br from-blue-50 via-teal-50 to-green-50">
-        Loading…
-      </div>
-    );
+    return <div className="min-h-screen p-6 text-gray-600 bg-gradient-to-br from-blue-50 via-teal-50 to-green-50">Loading…</div>;
   }
 
   /* ---------- Actions ---------- */
@@ -235,11 +213,7 @@ export default function App() {
     setNewsTitle(''); setNewsDetails(''); setNewsRivalry(''); setNewsImg('');
   };
   const delNews = (id: string) => setNews(prev => prev.filter(n => n.id !== id));
-
-  const startEditNews = (n: NewsItem) => {
-    setNewsEditingId(n.id);
-    setNewsEdit({ title: n.title, details: n.details || '', rivalry: n.rivalry || '', img: n.img });
-  };
+  const startEditNews = (n: NewsItem) => { setNewsEditingId(n.id); setNewsEdit({ title: n.title, details: n.details || '', rivalry: n.rivalry || '', img: n.img }); };
   const cancelEditNews = () => { setNewsEditingId(''); setNewsEdit({ title:'', details:'', rivalry:'', img:'' }); };
   const saveEditNews = () => {
     if (!newsEditingId) return;
@@ -247,16 +221,12 @@ export default function App() {
     cancelEditNews();
   };
 
-  // matches
+  // matches helpers
   const addUpcomingMatch = () => {
     if (!uDate) return;
     setMatches(prev => [{
       id: uid(), date: uDate, time: uTime || undefined, location: uLoc || undefined, rivalry: uRiv || undefined, notes: uNotes || undefined,
-      status: 'upcoming',
-      teamA: [], teamB: [], teamC: [],
-      stats: {},
-      motm: [], hattricks: [],
-      applied: {}
+      status: 'upcoming', teamA: [], teamB: [], teamC: [], stats: {}, motm: [], hattricks: [], applied: {}
     }, ...prev]);
     setUDate(''); setUTime(''); setULoc(''); setURiv(''); setUNotes('');
   };
@@ -265,11 +235,7 @@ export default function App() {
     if (!pDate) return;
     setMatches(prev => [{
       id: uid(), date: pDate, time: pTime || undefined, location: pLoc || undefined, rivalry: pRiv || undefined, notes: pNotes || undefined,
-      status: 'played',
-      teamA: [], teamB: [], teamC: [],
-      stats: {},
-      motm: [], hattricks: [],
-      applied: {}
+      status: 'played', teamA: [], teamB: [], teamC: [], stats: {}, motm: [], hattricks: [], applied: {}
     }, ...prev]);
     setPDate(''); setPTime(''); setPLoc(''); setPRiv(''); setPNotes('');
   };
@@ -277,10 +243,7 @@ export default function App() {
   const delMatch = (id: string) => setMatches(prev => prev.filter(m => m.id !== id));
 
   const convertUpcomingToPlayed = (id: string) => {
-    setMatches(prev => prev.map(m => {
-      if (m.id !== id || m.status !== 'upcoming') return m;
-      return { ...m, status: 'played', applied: m.applied || {} };
-    }));
+    setMatches(prev => prev.map(m => (m.id === id && m.status === 'upcoming') ? { ...m, status: 'played', applied: m.applied || {} } : m));
   };
 
   const addPlayerToTeam = (matchId: string, playerId: string, team: 'A'|'B'|'C') => {
@@ -302,8 +265,7 @@ export default function App() {
     setMatches(prev => prev.map(m => {
       if (m.id !== matchId) return m;
       const { [playerId]: _ignore, ...restStats } = m.stats || {};
-      return {
-        ...m,
+      return { ...m,
         teamA: m.teamA.filter(id => id !== playerId),
         teamB: m.teamB.filter(id => id !== playerId),
         teamC: m.teamC.filter(id => id !== playerId),
@@ -312,31 +274,14 @@ export default function App() {
     }));
   };
 
-  // ✅ Fixed: safe merge of existing stats (no duplicate keys)
-  const setMatchStat = (
-  matchId: string,
-  playerId: string,
-  kind: 'goals' | 'assists',
-  value: number
-) => {
-  setMatches(prev =>
-    prev.map(m => {
+  const setMatchStat = (matchId: string, playerId: string, kind: 'goals'|'assists', value: number) => {
+    setMatches(prev => prev.map(m => {
       if (m.id !== matchId) return m;
-
-      // SAFE merge: never declare goals/assists twice
-      const prevFor = m.stats?.[playerId] ?? { goals: 0, assists: 0 };
-      const nextFor = { ...prevFor, [kind]: Math.max(0, value) };
-
-      return {
-        ...m,
-        stats: {
-          ...m.stats,
-          [playerId]: nextFor,
-        },
-      };
-    })
-  );
-};
+      const stats = { ...m.stats, [playerId]: { goals: 0, assists: 0, ...(m.stats[playerId] || {}) } };
+      stats[playerId][kind] = Math.max(0, value);
+      return { ...m, stats };
+    }));
+  };
 
   const toggleAward = (matchId: string, field: 'motm'|'hattricks', playerId: string) => {
     setMatches(prev => prev.map(m => {
@@ -350,7 +295,6 @@ export default function App() {
   const clearAward = (matchId: string, field: 'motm'|'hattricks') => {
     setMatches(prev => prev.map(m => m.id === matchId ? { ...m, [field]: [] } as MatchItem : m));
   };
-
   const clearCleanSheet = (matchId: string) => {
     setMatches(prev => prev.map(m => m.id === matchId ? { ...m, cleanSheetPlayer: undefined } : m));
   };
@@ -359,28 +303,19 @@ export default function App() {
   const applyPlayedStatsToTotals = (matchId: string) => {
     const m = matches.find(x => x.id === matchId);
     if (!m) return;
-
     const teamSet = new Set<string>([...m.teamA, ...m.teamB, ...m.teamC]);
     const statIds = Object.keys(m.stats || {});
     const allIds = new Set<string>([...teamSet, ...statIds]);
 
     setPlayers(prev => prev.map(p => {
       if (!allIds.has(p.id)) return p;
-
       const old = (m.applied && m.applied[p.id]) || { goals: 0, assists: 0, counted: false };
       const curr = m.stats[p.id] || { goals: 0, assists: 0 };
       const isInTeam = teamSet.has(p.id);
-
       const deltaGoals = (curr.goals ?? 0) - (old.goals ?? 0);
       const deltaAssists = (curr.assists ?? 0) - (old.assists ?? 0);
       const deltaMatches = (isInTeam ? 1 : 0) - (old.counted ? 1 : 0);
-
-      return {
-        ...p,
-        goals: p.goals + deltaGoals,
-        assists: p.assists + deltaAssists,
-        matches: p.matches + deltaMatches,
-      };
+      return { ...p, goals: p.goals + deltaGoals, assists: p.assists + deltaAssists, matches: p.matches + deltaMatches };
     }));
 
     const newApplied: Record<string, { goals: number; assists: number; counted: boolean }> = { ...(m.applied || {}) };
@@ -394,9 +329,10 @@ export default function App() {
     if (selectedMatchId === matchId) setSelectedMatchId('');
   };
 
+  // sort keys (fix Vercel build error)
   const key = (m: MatchItem) => `${m.date} ${m.time ?? "00:00"}`;
-const upcoming = matches.filter(m=>m.status==="upcoming").sort((a,b)=> key(a).localeCompare(key(b)));
-const played   = matches.filter(m=>m.status==="played").sort((a,b)=> key(b).localeCompare(key(a)));
+  const upcoming = matches.filter(m => m.status === 'upcoming').sort((a,b)=> key(a).localeCompare(key(b)));
+  const played   = matches.filter(m => m.status === 'played'  ).sort((a,b)=> key(b).localeCompare(key(a)));
 
   /* ===================== UI ===================== */
   return (
@@ -405,11 +341,12 @@ const played   = matches.filter(m=>m.status==="played").sort((a,b)=> key(b).loca
       <div className="max-w-7xl mx-auto mb-6">
         <div className="rounded-3xl p-6 shadow-xl bg-gradient-to-r from-blue-600 via-teal-500 to-green-500 text-white ring-1 ring-white/10 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-extrabold tracking-tight">⚽ Youth Football Tracker</h1>
-            <p className="opacity-90 text-sm mt-1">Manage players, matches, stats & news — with automatic pricing and rankings.</p>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">⚽ Youth Football Tracker</h1>
+            <p className="opacity-90 text-xs sm:text-sm mt-1">
+              Manage players, matches, stats & news — with automatic pricing and rankings.
+            </p>
           </div>
           <div className="text-sm">
-            {/* Admin toggle */}
             <button className="opacity-80 hover:opacity-100 underline" onClick={!isAdmin ? login : logout}>
               {!isAdmin ? '🔒 Viewer' : '🔓 Admin'}
             </button>
@@ -418,13 +355,18 @@ const played   = matches.filter(m=>m.status==="played").sort((a,b)=> key(b).loca
       </div>
 
       <Tabs defaultValue="home" className="max-w-7xl mx-auto">
-        <TabsList className="grid grid-cols-6 w-full rounded-2xl bg-white/70 backdrop-blur border shadow-sm">
-          <TabsTrigger value="home">Home / News</TabsTrigger>
-          <TabsTrigger value="players">Players</TabsTrigger>
-          <TabsTrigger value="ranking">Ranking</TabsTrigger>
-          <TabsTrigger value="matches">Matches (played)</TabsTrigger>
-          <TabsTrigger value="calendar">Calendar (upcoming)</TabsTrigger>
-          <TabsTrigger value="settings">Settings</TabsTrigger>
+        <TabsList
+          className="
+            w-full flex flex-nowrap gap-2 overflow-x-auto no-scrollbar
+            rounded-2xl bg-white/70 backdrop-blur border shadow-sm
+          "
+        >
+          <TabsTrigger value="home"     className="shrink-0 px-3 py-2 text-sm">Home / News</TabsTrigger>
+          <TabsTrigger value="players"  className="shrink-0 px-3 py-2 text-sm">Players</TabsTrigger>
+          <TabsTrigger value="ranking"  className="shrink-0 px-3 py-2 text-sm">Ranking</TabsTrigger>
+          <TabsTrigger value="matches"  className="shrink-0 px-3 py-2 text-sm">Matches (played)</TabsTrigger>
+          <TabsTrigger value="calendar" className="shrink-0 px-3 py-2 text-sm">Calendar (upcoming)</TabsTrigger>
+          <TabsTrigger value="settings" className="shrink-0 px-3 py-2 text-sm">Settings</TabsTrigger>
         </TabsList>
 
         {/* HOME / NEWS */}
@@ -509,7 +451,7 @@ const played   = matches.filter(m=>m.status==="played").sort((a,b)=> key(b).loca
             <CardContent className="p-6">
               <h2 className="text-xl font-bold mb-3">📌 Tips</h2>
               <ul className="list-disc pl-5 text-sm space-y-1">
-                <li>Friends see Viewer mode. Click <b>🔒 Viewer</b> and enter your PIN to edit.</li>
+                <li>Friends see Viewer mode. Tap <b>🔒 Viewer</b> and enter your PIN to edit.</li>
                 <li>All data is stored locally in the browser (localStorage).</li>
               </ul>
             </CardContent>
@@ -613,35 +555,43 @@ const played   = matches.filter(m=>m.status==="played").sort((a,b)=> key(b).loca
 
         {/* RANKING (Total only) */}
         <TabsContent value="ranking" className="mt-6">
-          <Card className="shadow-xl border-0 bg-white/90 backdrop-blur rounded-3xl"><CardContent className="p-6">
-            <h2 className="text-xl font-bold mb-3">🏆 Ranking (Total value)</h2>
-            <div className="grid grid-cols-12 font-semibold border-b pb-2 mb-2 text-sm">
-              <div>#</div>
-              <div className="col-span-3">Player</div>
-              <div>Role</div>
-              <div>G</div>
-              <div>A</div>
-              <div>M</div>
-              <div>Score/m</div>
-              <div>Lvl</div>
-              <div>Bonus</div>
-              <div>Total</div>
-            </div>
-            {ranking.map((p, i) => (
-              <div key={p.id} className="grid grid-cols-12 items-center py-1 border-b text-sm">
-                <div>{i + 1}</div>
-                <div className="col-span-3">{p.name}</div>
-                <div>{p.role}</div>
-                <div>{p.goals}</div>
-                <div>{p.assists}</div>
-                <div>{p.matches}</div>
-                <div>{(p as any).score}</div>
-                <div>{(p as any).level}</div>
-                <div>{(p as any).bonus}</div>
-                <div className="font-semibold">{(p as any).total}</div>
+          <Card className="shadow-xl border-0 bg-white/90 backdrop-blur rounded-3xl">
+            <CardContent className="p-4 sm:p-6">
+              <h2 className="text-lg sm:text-xl font-bold mb-3">🏆 Ranking (Total value)</h2>
+
+              <div className="overflow-x-auto">
+                <div className="min-w-[700px]">
+                  <div className="grid grid-cols-12 font-semibold border-b pb-2 mb-2 text-xs sm:text-sm">
+                    <div className="whitespace-nowrap">#</div>
+                    <div className="col-span-3 whitespace-nowrap">Player</div>
+                    <div className="whitespace-nowrap">Role</div>
+                    <div className="whitespace-nowrap">G</div>
+                    <div className="whitespace-nowrap">A</div>
+                    <div className="whitespace-nowrap">M</div>
+                    <div className="whitespace-nowrap">Score/m</div>
+                    <div className="whitespace-nowrap">Lvl</div>
+                    <div className="whitespace-nowrap">Bonus</div>
+                    <div className="whitespace-nowrap">Total</div>
+                  </div>
+
+                  {ranking.map((p, i) => (
+                    <div key={p.id} className="grid grid-cols-12 items-center py-1 border-b text-xs sm:text-sm">
+                      <div>{i + 1}</div>
+                      <div className="col-span-3 truncate">{p.name}</div>
+                      <div className="whitespace-nowrap">{p.role}</div>
+                      <div className="whitespace-nowrap">{p.goals}</div>
+                      <div className="whitespace-nowrap">{p.assists}</div>
+                      <div className="whitespace-nowrap">{p.matches}</div>
+                      <div className="whitespace-nowrap">{(p as any).score}</div>
+                      <div className="whitespace-nowrap">{(p as any).level}</div>
+                      <div className="whitespace-nowrap">{(p as any).bonus}</div>
+                      <div className="whitespace-nowrap font-semibold">{(p as any).total}</div>
+                    </div>
+                  ))}
+                </div>
               </div>
-            ))}
-          </CardContent></Card>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* MATCHES (played) */}
