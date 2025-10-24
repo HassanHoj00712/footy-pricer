@@ -313,22 +313,30 @@ export default function App() {
   };
 
   // ✅ Fixed: safe merge of existing stats (no duplicate keys)
-  const setMatchStat = (matchId: string, playerId: string, kind: 'goals'|'assists', value: number) => {
-    setMatches(prev =>
-      prev.map(m => {
-        if (m.id !== matchId) return m;
-        const prevStatsForPlayer = m.stats?.[playerId] ?? { goals: 0, assists: 0 };
-        const updatedForPlayer = { ...prevStatsForPlayer, [kind]: Math.max(0, value) };
-        return {
-          ...m,
-          stats: {
-            ...m.stats,
-            [playerId]: updatedForPlayer,
-          },
-        };
-      })
-    );
-  };
+  const setMatchStat = (
+  matchId: string,
+  playerId: string,
+  kind: 'goals' | 'assists',
+  value: number
+) => {
+  setMatches(prev =>
+    prev.map(m => {
+      if (m.id !== matchId) return m;
+
+      // SAFE merge: never declare goals/assists twice
+      const prevFor = m.stats?.[playerId] ?? { goals: 0, assists: 0 };
+      const nextFor = { ...prevFor, [kind]: Math.max(0, value) };
+
+      return {
+        ...m,
+        stats: {
+          ...m.stats,
+          [playerId]: nextFor,
+        },
+      };
+    })
+  );
+};
 
   const toggleAward = (matchId: string, field: 'motm'|'hattricks', playerId: string) => {
     setMatches(prev => prev.map(m => {
