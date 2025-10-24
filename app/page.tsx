@@ -394,8 +394,9 @@ export default function App() {
     if (selectedMatchId === matchId) setSelectedMatchId('');
   };
 
-  const upcoming = matches.filter(m => m.status === 'upcoming').sort((a,b)=> (a.date+a.time) > (b.date+b.time ? 1 : -1));
-  const played   = matches.filter(m => m.status === 'played'  ).sort((a,b)=> (b.date+b.time) > (a.date+a.time ? 1 : -1));
+  const key = (m: MatchItem) => `${m.date} ${m.time ?? "00:00"}`;
+const upcoming = matches.filter(m=>m.status==="upcoming").sort((a,b)=> key(a).localeCompare(key(b)));
+const played   = matches.filter(m=>m.status==="played").sort((a,b)=> key(b).localeCompare(key(a)));
 
   /* ===================== UI ===================== */
   return (
