@@ -276,11 +276,18 @@ export default function App() {
 
   const setMatchStat = (matchId: string, playerId: string, kind: 'goals'|'assists', value: number) => {
     setMatches(prev => prev.map(m => {
-      if (m.id !== matchId) return m;
-      const stats = { ...m.stats, [playerId]: { goals: 0, assists: 0, ...(m.stats[playerId] || {}) } };
-      stats[playerId][kind] = Math.max(0, value);
-      return { ...m, stats };
-    }));
+  if (m.id !== matchId) return m;
+
+  // get current (or default) per-player stats without duplicating keys
+  const current = m.stats?.[playerId] ?? { goals: 0, assists: 0 };
+  const updatedForPlayer = { ...current, [kind]: Math.max(0, value) };
+
+  // write back into the match stats map
+  const nextStats = { ...m.stats, [playerId]: updatedForPlayer };
+
+  return { ...m, stats: nextStats };
+}));
+
   };
 
   const toggleAward = (matchId: string, field: 'motm'|'hattricks', playerId: string) => {
